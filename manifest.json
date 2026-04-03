@@ -1,0 +1,13 @@
+{
+  "name": "Мой день",
+  "short_name": "Мой день",
+  "description": "Ежедневный трекер роста",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#0f0f13",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
