@@ -23,13 +23,14 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
+@supports(height:100dvh){body{height:100dvh;}}
 body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;display:flex;flex-direction:column;}
 
 /* ══ MOBILE LAYOUT ══ */
-.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;width:100%;}
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;width:100%;overflow:hidden;}
 
 /* ══ SCREENS ══ */
-.scr{display:none;flex:1;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:none;}
+.scr{display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden;}
 .scr.on{display:flex;}
 
 /* Screen scrollable wrapper */
@@ -59,11 +60,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 .ptab.eve.on{background:var(--vio-s);border-color:var(--vio);color:var(--vio);}
 
 /* PHASE CONTENT (mobile) */
-.pcon{display:none;flex-direction:column;padding:12px 14px 24px;}
-.pcon.on{display:flex;}
+.pcon{display:none;flex-direction:column;padding:12px 14px 24px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.pcon.on{display:flex;flex:1;min-height:0;}
 
 /* BOTTOM NAV (mobile) */
-.bnav{display:flex;background:var(--surf);border-top:1px solid var(--brd);padding:8px 0 calc(8px + var(--sbot));flex-shrink:0;}
+.bnav{display:flex;background:var(--surf);border-top:1px solid var(--brd);padding:8px 0 calc(8px + var(--sbot));flex-shrink:0;z-index:10;position:relative;}
 .nbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer;color:var(--mut);transition:color .15s;background:none;border:none;font-family:'Inter',sans-serif;}
 .nbtn.on{color:var(--acc);}
 .nicon{font-size:20px;line-height:1;}
@@ -85,7 +86,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
   .bnav::before{content:'Мой день';font-family:'Lora',serif;font-size:18px;font-weight:600;color:var(--txt);padding:0 20px 20px;display:block;border-bottom:1px solid var(--brd);margin-bottom:12px;width:100%;}
 
   /* Screens fill rest */
-  .scr{flex:1;overflow-y:auto;overflow-x:hidden;}
+  .scr{flex:1;overflow:hidden;}
 
   /* Topbar desktop */
   .topbar{padding:28px 32px 16px;position:sticky;}
@@ -267,19 +268,19 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 
   <!-- ДЕНЬ -->
   <div class="scr on" id="scr-day">
-    <div id="day-inner" style="display:flex;flex-direction:column;min-height:100%;"></div>
+    <div id="day-inner" style="display:flex;flex-direction:column;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
   </div>
 
   <!-- ГРАФИК -->
   <div class="scr" id="scr-schedule">
     <div class="sc-topbar"><div class="sc-title">График дня</div><div class="sc-sub">нажми на поле чтобы изменить</div></div>
-    <div class="sc-wrap" id="sc-wrap"></div>
+    <div class="scr-scroll"><div class="sc-wrap" id="sc-wrap"></div></div>
   </div>
 
   <!-- СПРАВКА -->
   <div class="scr" id="scr-ref">
     <div class="ref-topbar"><div class="ref-title">Справка</div></div>
-    <div class="ref-scroll">
+    <div class="scr-scroll"><div class="ref-scroll">
       <div class="rh1">Корень проблемы</div>
       <div class="rbox">Я пережил тяжёлый год на 300–500$. Тело и мозг запомнили угрозу. Теперь когда думаю о работе или деньгах — мозг включает режим тревоги.<br><br><strong>Это не слабость.</strong> Это защитный механизм. Ситуация изменилась — работа есть — но мозг живёт в том году.</div>
       <div class="rgold"><strong>Важно:</strong> это не лень. Это выученная реакция, которую можно перезаписать через конкретные действия каждый день.</div>
@@ -316,38 +317,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
       <div class="rh2">Смысл (Франкл)</div>
       <div class="ritalic">«У того кто имеет зачем жить, можно вынести почти любое как.»</div>
     </div>
+  </div><!-- /scr-scroll -->
   </div>
-
-
-  <!-- ══ НАСТРОЙКИ ══ -->
   <div class="scr" id="scr-settings">
     <div class="sc-topbar"><div class="sc-title">Настройки</div><div class="sc-sub">синхронизация и уведомления</div></div>
-    <div class="sc-wrap" style="padding-bottom:80px;">
-      <div class="card">
-        <div class="card-lbl acc">// GitHub Gist — синхронизация</div>
-        <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-status-txt">Не настроено</span></div>
-        <input class="token-inp" id="token-inp" type="password" placeholder="Вставь GitHub Token (ghp_...)" onchange="saveToken(this.value)">
-        <div style="font-size:11px;color:var(--mut);margin-bottom:10px;">Токен хранится только на этом устройстве. Нужен scope: gist.</div>
-        <div class="sync-btns">
-          <button class="syncbtn primary" onclick="syncToGist()">☁️ Сохранить в облако</button>
-          <button class="syncbtn" onclick="syncFromGist()">📥 Загрузить из облако</button>
-        </div>
-        <div style="margin-top:8px;">
-          <button class="syncbtn" onclick="autoSyncToggle()" id="autosync-btn" style="width:100%;">⚡ Автосинхронизация: выкл</button>
-        </div>
-      </div>
-      <div class="card" id="notif-wrap"></div>
-      <div class="card">
-        <div class="card-lbl red">// сброс</div>
-        <button class="reset-btn" onclick="resetDay()">Сбросить сегодняшний день</button>
-      </div>
-    </div>
-  </div>
-  </div>
-
-  <!-- НАСТРОЙКИ -->
-  <div class="scr" id="scr-settings">
-    <div class="sc-topbar"><div class="sc-title">Настройки</div><div class="sc-sub">синхронизация и уведомления</div></div>
+    <div class="scr-scroll">
     <div class="sc-wrap" style="padding-bottom:80px;">
       <div class="card">
         <div class="card-lbl acc">// GitHub Gist — синхронизация</div>
@@ -369,6 +343,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
         <button class="reset-btn" onclick="resetDay()">Сбросить сегодняшний день</button>
       </div>
     </div>
+    </div><!-- /scr-scroll -->
   </div>
 
   <!-- NAV -->
