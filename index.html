@@ -60,8 +60,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 .ptab.eve.on{background:var(--vio-s);border-color:var(--vio);color:var(--vio);}
 
 /* PHASE CONTENT (mobile) */
-.pcon{display:none;flex-direction:column;padding:12px 14px 32px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
-.pcon.on{display:flex;flex:1;min-height:0;}
+.pcon{display:none;flex-direction:column;padding:12px 14px 32px;}
+.pcon.on{display:flex;}
 
 /* BOTTOM NAV (mobile) */
 .bnav{display:flex;background:var(--surf);border-top:1px solid var(--brd);padding:8px 0 calc(8px + var(--sbot));flex-shrink:0;z-index:10;position:relative;}
@@ -87,7 +87,6 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 
   /* Screens fill rest */
   .scr{flex:1;overflow:hidden;}
-  #day-inner{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
   /* Topbar desktop */
   .topbar{padding:28px 32px 16px;position:sticky;}
@@ -119,7 +118,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 .card-border-acc{border-left:3px solid var(--acc);}
 .card-border-vio{border-left:3px solid var(--vio);}
 
-.smysl-inp{width:100%;background:none;border:none;color:var(--txt);font-family:'Lora',serif;font-size:14px;font-style:italic;line-height:1.6;resize:none;outline:none;min-height:36px;}
+.smysl-inp{width:100%;background:none;border:none;color:var(--txt);font-family:'Lora',serif;font-size:14px;font-style:italic;line-height:1.6;resize:none;outline:none;min-height:56px;overflow:hidden;}
 .smysl-inp::placeholder{color:var(--mut);}
 
 .conf-q{font-size:13px;color:var(--txt2);line-height:1.5;margin-bottom:10px;}
@@ -269,7 +268,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 
   <!-- ДЕНЬ -->
   <div class="scr on" id="scr-day">
-    <div id="day-inner" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;"></div>
+    <div id="day-topbar"></div>
+    <div id="day-tabs"></div>
+    <div id="day-content" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
   </div>
 
   <!-- ГРАФИК -->
@@ -525,7 +526,7 @@ function renderDay(){
   const smyslHTML=
     '<div class="card card-border-acc">'+
       '<div class="card-lbl acc">// зачем я это делаю</div>'+
-      '<textarea class="smysl-inp" rows="2" placeholder="Семья, которую обеспечиваю. Игра, которую строю. Студия, к которой иду..." onchange="sv(\'smysl\',this.value)">'+esc(ld('smysl',''))+'</textarea>'+
+      '<textarea class="smysl-inp" rows="3" placeholder="Семья, которую обеспечиваю. Игра, которую строю. Студия, к которой иду..." onchange="sv(\'smysl\',this.value)" oninput="this.style.height=\'auto\';this.style.height=this.scrollHeight+\'px\'">'+esc(ld('smysl',''))+'</textarea>'+
     '</div>';
 
   const conflictHTML=
@@ -555,7 +556,9 @@ function renderDay(){
   const insightHTML='<div class="card"><div class="card-lbl grn">// один инсайт дня</div><input class="tinp" id="insight-inp" type="text" placeholder="Что понял сегодня?" value="'+esc(ld('insight',''))+'" onchange="sv(\'insight\',this.value)"></div>';
 
   if(isDesktop()){
-    document.getElementById('day-inner').innerHTML=
+    document.getElementById('day-topbar').innerHTML='';
+    document.getElementById('day-tabs').innerHTML='';
+    document.getElementById('day-content').innerHTML=
       topbarHTML+
       '<div class="desk-smysl">'+smyslHTML+'</div>'+
       '<div class="cols-grid">'+
@@ -576,13 +579,14 @@ function renderDay(){
         '</div>'+
       '</div>';
   } else {
-    document.getElementById('day-inner').innerHTML=
-      topbarHTML+
+    document.getElementById('day-topbar').innerHTML=topbarHTML;
+    document.getElementById('day-tabs').innerHTML=
       '<div class="ptabs">'+
         '<div class="ptab mor on" id="pt-mor" onclick="switchPhase(\'mor\')">☀️ Утро</div>'+
         '<div class="ptab day" id="pt-day" onclick="switchPhase(\'day\')">⚡ День</div>'+
         '<div class="ptab eve" id="pt-eve" onclick="switchPhase(\'eve\')">🌙 Вечер</div>'+
-      '</div>'+
+      '</div>';
+    document.getElementById('day-content').innerHTML=
       '<div class="pcon on" id="pc-mor">'+
         smyslHTML+conflictHTML+stateHTML+
         '<div class="card">'+taskListHTML('morning')+'</div>'+
@@ -597,16 +601,16 @@ function renderDay(){
       '</div>';
   }
   updateProg();
+  // auto-resize textareas
+  document.querySelectorAll('.smysl-inp').forEach(function(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
 }
 
 function renderAll(){
   // save scroll position before re-render
   var scrollTop=0;
   var ph=window._activePhase||'mor';
-  if(window.innerWidth<768){
-    var pc=document.getElementById('pc-'+ph);
-    if(pc)scrollTop=pc.scrollTop;
-  }
+  var dc=document.getElementById('day-content');
+  if(dc)scrollTop=dc.scrollTop;
   renderDay();
   // restore active phase on mobile after re-render
   if(window.innerWidth<768){
@@ -616,10 +620,10 @@ function renderAll(){
       if(pt)pt.classList.toggle('on',p===ph);
       if(pcEl)pcEl.classList.toggle('on',p===ph);
     });
-    // restore scroll
-    var pcR=document.getElementById('pc-'+ph);
-    if(pcR)pcR.scrollTop=scrollTop;
   }
+  // restore scroll
+  var dcR=document.getElementById('day-content');
+  if(dcR)dcR.scrollTop=scrollTop;
 }
 
 // ══ SELECTORS ══
