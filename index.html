@@ -349,7 +349,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
       <div class="card">
         <div class="card-lbl acc">// GitHub Gist — синхронизация</div>
         <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-status-txt">Не настроено</span></div>
-        <input class="token-inp" id="token-inp" type="password" placeholder="Вставь GitHub Token (ghp_...)">
+        <input class="token-inp" id="token-inp" type="text" placeholder="Вставь GitHub Token (ghp_...)">
+        <button class="syncbtn primary" onclick="saveTokenFromInput()" style="width:100%;margin-bottom:8px;">💾 Сохранить токен</button>
         <div style="font-size:11px;color:var(--mut);margin-bottom:10px;">Токен хранится только на этом устройстве. Нужен scope: gist.</div>
         <div class="sync-btns">
           <button class="syncbtn primary" onclick="syncToGist()">☁️ Сохранить в облако</button>
@@ -619,7 +620,19 @@ function renderDay(){
   updateProg();
 }
 
-function renderAll(){renderDay();}
+function renderAll(){
+  renderDay();
+  // restore active phase on mobile after re-render
+  if(window.innerWidth<768){
+    var ph=window._activePhase||'mor';
+    ['mor','day','eve'].forEach(function(p){
+      var pt=document.getElementById('pt-'+p);
+      var pc=document.getElementById('pc-'+p);
+      if(pt)pt.classList.toggle('on',p===ph);
+      if(pc)pc.classList.toggle('on',p===ph);
+    });
+  }
+}
 
 // ══ SELECTORS ══
 function selState(el){const v=el.dataset.v;const nv=ld('state','')=== v?'':v;sv('state',nv);document.querySelectorAll('#chips .chip').forEach(c=>c.classList.toggle('on',c.dataset.v===nv));}
@@ -627,7 +640,19 @@ function selConflict(el){const v=el.dataset.v;const cls=el.dataset.cls;const nv=
 function selMotiv(el){const v=el.dataset.v;const nv=ld('motiv','')=== v?'':v;sv('motiv',nv);document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on'));if(nv)el.classList.add('on');}
 
 // ══ PHASE SWITCH (mobile) ══
-function switchPhase(ph){['mor','day','eve'].forEach(p=>{const pt=document.getElementById('pt-'+p);const pc=document.getElementById('pc-'+p);if(pt)pt.classList.remove('on');if(pc)pc.classList.remove('on');});const pt=document.getElementById('pt-'+ph);const pc=document.getElementById('pc-'+ph);if(pt)pt.classList.add('on');if(pc)pc.classList.add('on');}
+function switchPhase(ph){
+  window._activePhase=ph;
+  ['mor','day','eve'].forEach(function(p){
+    var pt=document.getElementById('pt-'+p);
+    var pc=document.getElementById('pc-'+p);
+    if(pt)pt.classList.remove('on');
+    if(pc)pc.classList.remove('on');
+  });
+  var pt=document.getElementById('pt-'+ph);
+  var pc=document.getElementById('pc-'+ph);
+  if(pt)pt.classList.add('on');
+  if(pc)pc.classList.add('on');
+}
 
 // ══ SCREEN SWITCH ══
 function switchScr(name,btn){
@@ -734,11 +759,9 @@ function autoSyncToggle(){
 // ══ SETTINGS RENDER ══
 function renderSettings(){
   const token=getToken();
-  const inp=document.getElementById('token-inp');
-  if(inp)inp.value=token?'••••••••••••••••••':'' ;
   const btn=document.getElementById('autosync-btn');
   if(btn)btn.textContent='⚡ Автосинхронизация: '+(ld('autosync',false)?'вкл':'выкл');
-  if(token){setSyncStatus('ok','Токен настроен');}else{setSyncStatus('','Не настроено');}
+  if(token){setSyncStatus('ok','Токен настроен ✓');}else{setSyncStatus('','Не настроено — введи токен');}
   renderNotif();
 }
 
@@ -771,8 +794,17 @@ if(Notification.permission==='granted')scheduleNotifs();
 renderDay();
 
 
-// Token input handler
-document.getElementById('token-inp').addEventListener('change', function(){ saveToken(this.value); });
+function saveTokenFromInput(){
+  var val=document.getElementById('token-inp').value.trim();
+  if(!val){showToast('Введи токен');return;}
+  saveToken(val);
+  document.getElementById('token-inp').value='';
+  document.getElementById('token-inp').placeholder='Токен сохранён ✓';
+  setTimeout(function(){
+    var inp=document.getElementById('token-inp');
+    if(inp)inp.placeholder='Вставь GitHub Token (ghp_...)';
+  },2000);
+}
 </script>
 </body>
 </html>
