@@ -60,7 +60,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 .ptab.eve.on{background:var(--vio-s);border-color:var(--vio);color:var(--vio);}
 
 /* PHASE CONTENT (mobile) */
-.pcon{display:none;flex-direction:column;padding:12px 14px 24px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.pcon{display:none;flex-direction:column;padding:12px 14px 32px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 .pcon.on{display:flex;flex:1;min-height:0;}
 
 /* BOTTOM NAV (mobile) */
@@ -269,7 +269,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 
   <!-- ДЕНЬ -->
   <div class="scr on" id="scr-day">
-    <div id="day-inner" style="display:flex;flex-direction:column;flex:1;min-height:0;"></div>
+    <div id="day-inner" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;"></div>
   </div>
 
   <!-- ГРАФИК -->
@@ -600,16 +600,25 @@ function renderDay(){
 }
 
 function renderAll(){
+  // save scroll position before re-render
+  var scrollTop=0;
+  var ph=window._activePhase||'mor';
+  if(window.innerWidth<768){
+    var pc=document.getElementById('pc-'+ph);
+    if(pc)scrollTop=pc.scrollTop;
+  }
   renderDay();
   // restore active phase on mobile after re-render
   if(window.innerWidth<768){
-    var ph=window._activePhase||'mor';
     ['mor','day','eve'].forEach(function(p){
       var pt=document.getElementById('pt-'+p);
-      var pc=document.getElementById('pc-'+p);
+      var pcEl=document.getElementById('pc-'+p);
       if(pt)pt.classList.toggle('on',p===ph);
-      if(pc)pc.classList.toggle('on',p===ph);
+      if(pcEl)pcEl.classList.toggle('on',p===ph);
     });
+    // restore scroll
+    var pcR=document.getElementById('pc-'+ph);
+    if(pcR)pcR.scrollTop=scrollTop;
   }
 }
 
@@ -768,7 +777,14 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 // ══ RESIZE ══
 let resizeT;
-window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(renderDay,200);});
+let lastW=window.innerWidth;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeT);
+  resizeT=setTimeout(()=>{
+    const w=window.innerWidth;
+    if(w!==lastW){lastW=w;renderDay();}
+  },200);
+});
 
 // ══ SW ══
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
