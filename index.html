@@ -87,6 +87,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 
   /* Screens fill rest */
   .scr{flex:1;overflow:hidden;}
+  #day-inner{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
   /* Topbar desktop */
   .topbar{padding:28px 32px 16px;position:sticky;}
@@ -268,7 +269,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;displa
 
   <!-- ДЕНЬ -->
   <div class="scr on" id="scr-day">
-    <div id="day-inner" style="display:flex;flex-direction:column;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div id="day-inner" style="display:flex;flex-direction:column;flex:1;min-height:0;"></div>
   </div>
 
   <!-- ГРАФИК -->
