@@ -696,8 +696,13 @@ function renderSchedule(){
 const GIST_FILENAME='moiden_data.json';
 let gistId=null;
 
-function saveToken(val){ST['gh_token']=val.trim();persist();showToast('Токен сохранён');}
-function getToken(){return ld('gh_token','');}
+// Token stored SEPARATELY from sync data - never goes to Gist
+function saveToken(val){
+  val=val.trim();
+  if(val) localStorage.setItem('moiden_token', val);
+  showToast('Токен сохранён');
+}
+function getToken(){ return localStorage.getItem('moiden_token')||''; }
 
 function setSyncStatus(state,msg){
   const dot=document.getElementById('sync-dot');
@@ -728,7 +733,7 @@ async function syncToGist(silent){
   if(!silent)setSyncStatus('loading','Сохраняю в облако...');
   try{
     const id=gistId||await findOrCreateGist();if(!id){setSyncStatus('err','Ошибка подключения');return;}
-    const res=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(ST)}}})});
+    const res=await fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILENAME]:{content:(()=>{const d={...ST};delete d['gh_token'];return JSON.stringify(d);})()}}})});
     if(res.ok){setSyncStatus('ok','Синхронизировано ✓');if(!silent)showToast('Данные сохранены в облако!');}
     else{setSyncStatus('err','Ошибка сохранения');}
   }catch(e){setSyncStatus('err','Ошибка сети');}
@@ -776,7 +781,7 @@ function reqNotif(){Notification.requestPermission().then(p=>{if(p==='granted'){
 function scheduleNotifs(){const now=new Date();function fireAt(h,m,msg){const t=new Date(now);t.setHours(h,m,0,0);if(t<=now)t.setDate(t.getDate()+1);setTimeout(()=>{if(Notification.permission==='granted')new Notification('Мой день',{body:msg,icon:'./icon.svg'});},t-now);}fireAt(9,0,'☀️ Доброе утро! Открой трекер и начни день с ясностью.');fireAt(21,30,'🌙 Время вечернего дебаггинга. Что сделал сегодня?');}
 
 // ══ RESET ══
-function resetDay(){if(!confirm('Сбросить день? Стрик, смысл и график сохранятся.'))return;const keep={};['streak','last_day','smysl','epoch','sc','cu_morning','cu_day','cu_evening','gh_token','autosync'].forEach(k=>{if(ST[k]!==undefined)keep[k]=ST[k];});ST=keep;persist();renderAll();}
+function resetDay(){if(!confirm('Сбросить день? Стрик, смысл и график сохранятся.'))return;const keep={};['streak','last_day','smysl','epoch','sc','cu_morning','cu_day','cu_evening','autosync'].forEach(k=>{if(ST[k]!==undefined)keep[k]=ST[k];});ST=keep;persist();renderAll();}
 
 // ══ TOAST ══
 let toastT;
